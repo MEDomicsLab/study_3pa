@@ -1,6 +1,14 @@
 """
-This file contains code to process data for the In-Hospital Mortality study
+This file contains code to process datasets for the In-Hospital Mortality study
 """
+from typing import Optional
+
+import pandas as pd
+
+
+def round_binary_variables(df: pd.DataFrame) -> pd.DataFrame:
+    variables_to_round = ['mets', 'hem', 'aids', 'cpap', 'vent']
+    df[variables_to_round] = df[variables_to_round].round()
 
 
 def ventilation_correction(row):
