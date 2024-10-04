@@ -19,12 +19,6 @@ class XGBClassifier(ClassificationModel):
         super().__init__(objective=objective, class_weighting=class_weighting, random_state=random_state)
         self.model_class = xgb.Booster
 
-    # def train(self, x_train: np.ndarray, y_train: np.ndarray, x_validation: np.ndarray, y_validation: np.ndarray,
-    #           training_parameters: Optional[Dict[str, Any]], balance_train_classes: bool, weights: np.ndarray = None
-    #           ) -> None:
-    #
-    #     self.fit(x_train, y_train)
-
     def fit(self, data, target, n_trials=100, timeout: int = None, threshold: str = None, calibrate: bool = False,
             training_parameters: dict = None, balance_train_classes: bool = None, weights: np.ndarray = None):
 
@@ -62,7 +56,7 @@ class XGBClassifier(ClassificationModel):
         self.set_params(params)
         self.model = xgb.XGBClassifier(**params)
 
-        self.model.fit(data, target)
+        self.model.fit(data, target, sample_weight=weights)
 
         if calibrate:
             # print(f"Results before calibration: \n {self.get_results(calibration_data, calibration_target)}")
@@ -84,7 +78,8 @@ class XGBClassifier(ClassificationModel):
             elif threshold.lower() == 'auprc':
                 self._threshold = self._optimal_threshold_auprc(target=target, predicted=predicted)
             else:
-                raise NotImplementedError
+                raise NotImplementedError("Threshold correction methods must be 'auc' or 'auprc', not "
+                                          "{}".format(threshold))
 
     def predict_proba(self, X):
         if self._calibration:

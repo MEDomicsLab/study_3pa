@@ -45,7 +45,7 @@ class RandomForestOptunaClassifier(ClassificationModel):
         self.set_params(params)
         self.model = RandomForestClassifier(**params, random_state=self._random_state)
 
-        self.model.fit(data, target)
+        self.model.fit(data, target, sample_weight=weights)
 
         if calibrate:
             self.calibrate_model(y_pred=self.model.predict_proba(calibration_data)[:, 1],
