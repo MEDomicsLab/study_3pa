@@ -8,7 +8,9 @@ from scipy.optimize import curve_fit
 # Set random seed for reproducibility
 np.random.seed(15)
 
-n_points = 75
+# Use 100 points for training but only 15 points for plotting
+n_train_points = 100
+n_plot_points = 20
 
 # Define Seaborn color palette (to match colors between density and scatter plots)
 palette = sns.color_palette("deep")
@@ -16,32 +18,39 @@ hospital_a_color = palette[0]  # Blue
 hospital_b_color = palette[2]  # Green
 
 # Class 0, Hospital A (circles) - Sinusoidal pattern with some noise
-class0_groupA_x = np.clip(skewnorm.rvs(-3, loc=6, scale=3, size=n_points), 0, 12.5)
+class0_groupA_x = np.clip(skewnorm.rvs(-3, loc=6, scale=3, size=n_train_points), 0, 12.5)
 class0_groupA_y = (3 * np.sin(0.5 * class0_groupA_x - 1.4) +
-                   np.random.normal(scale=1.0, size=n_points) *
+                   np.random.normal(scale=1.0, size=n_train_points) *
                    (np.abs(6.5 - class0_groupA_x) + 2) / 6 - 0.3 * class0_groupA_x + 0.5)
 
 # Class 0, Hospital B (triangles)
-class0_groupB_x = np.clip(skewnorm.rvs(3, loc=6, scale=3, size=n_points), 0, 12.5)
+class0_groupB_x = np.clip(skewnorm.rvs(3, loc=6, scale=3, size=n_plot_points), 0, 12.5)
 class0_groupB_y = (3 * np.sin(0.5 * class0_groupB_x - 1.4) +
-                   np.random.normal(scale=1.0, size=n_points) *
+                   np.random.normal(scale=1.0, size=n_plot_points) *
                    (np.abs(6.5 - class0_groupB_x) + 1) / 4 - 0.15 * (12 - class0_groupB_x))
 
 # Class 1, Hospital A (circles)
-class1_groupA_x = np.clip(skewnorm.rvs(-3, loc=6, scale=3, size=n_points), 0, 12.5)
+class1_groupA_x = np.clip(skewnorm.rvs(-3, loc=6, scale=3, size=n_train_points), 0, 12.5)
 class1_groupA_y = (3 * np.sin(0.5 * class1_groupA_x - 1.4) +
-                   1.5 + np.random.normal(scale=1.0, size=n_points) *
+                   1.5 + np.random.normal(scale=1.0, size=n_train_points) *
                    (np.abs(6.5 - class1_groupA_x) + 1) / 4 +
                    0.15 * class1_groupA_x)
 
 # Class 1, Hospital B (triangles)
-class1_groupB_x = np.clip(skewnorm.rvs(3, loc=6, scale=3, size=n_points), 0, 12.5)
-class1_groupB_y = 3 * np.sin(0.5 * class1_groupB_x - 1.4) + 1.5 + np.random.normal(scale=1.0, size=n_points) - 0.1 * class1_groupB_x + 1.2
+class1_groupB_x = np.clip(skewnorm.rvs(3, loc=6, scale=3, size=n_plot_points), 0, 12.5)
+class1_groupB_y = (3 * np.sin(0.5 * class1_groupB_x - 1.4) + 1.5 +
+                   np.random.normal(scale=1.0, size=n_plot_points) - 0.1 * class1_groupB_x + 1.2)
 
 # Combine X values for Hospital A and B (for density plot)
 hospitalA_x = np.concatenate([class0_groupA_x, class1_groupA_x])
 hospitalA_y = np.concatenate([class0_groupA_y, class1_groupA_y])
 hospitalB_x = np.concatenate([class0_groupB_x, class1_groupB_x])
+
+# Use only 15 points for plotting from Set A
+plot_class0_groupA_x = class0_groupA_x[:n_plot_points]
+plot_class0_groupA_y = class0_groupA_y[:n_plot_points]
+plot_class1_groupA_x = class1_groupA_x[:n_plot_points]
+plot_class1_groupA_y = class1_groupA_y[:n_plot_points]
 
 # Define the sinusoidal function to fit
 def sinusoidal_model(x, a, b, c):
@@ -72,14 +81,14 @@ def plot_figure(class0_x, class0_y, class1_x, class1_y, hospitalA_x, hospitalB_x
     ax_bottom = fig.add_subplot(gs[9, 0:4], sharex=ax_main)
 
     # Scatter plot for Class 0
-    ax_main.scatter(class0_x[0], class0_y[0], marker='o', color=hospital_a_color, s=60, alpha=0.5)
+    ax_main.scatter(class0_x[0], class0_y[0], marker='o', color=hospital_a_color, s=120, alpha=0.5)
     if class0_x[1] is not None:
-        ax_main.scatter(class0_x[1], class0_y[1], marker='o', color=hospital_b_color, s=60, alpha=0.5)
+        ax_main.scatter(class0_x[1], class0_y[1], marker='o', color=hospital_b_color, s=120, alpha=0.5)
 
     # Scatter plot for Class 1
-    ax_main.scatter(class1_x[0], class1_y[0], marker='^', color=hospital_a_color, s=60, alpha=0.75, facecolors='none')
+    ax_main.scatter(class1_x[0], class1_y[0], marker='^', color=hospital_a_color, s=120, alpha=0.75, facecolors='none')
     if class1_x[1] is not None:
-        ax_main.scatter(class1_x[1], class1_y[1], marker='^', color=hospital_b_color, s=60, alpha=0.75, facecolors='none')
+        ax_main.scatter(class1_x[1], class1_y[1], marker='^', color=hospital_b_color, s=120, alpha=0.75, facecolors='none')
 
     # # Plot the decision boundary
     # ax_main.plot(x_boundary, y_boundary, color='black', linestyle='--', linewidth=3)
@@ -105,8 +114,8 @@ def plot_figure(class0_x, class0_y, class1_x, class1_y, hospitalA_x, hospitalB_x
     ax_bottom.xaxis.set_ticks_position('none')
     ax_bottom.yaxis.set_ticks_position('none')
 
-    ax_main.set_ylabel('Y', size=20, weight='bold')
-    ax_bottom.set_xlabel('X', size=20, weight='bold')
+    ax_main.set_ylabel('X2', size=20, weight='bold')
+    ax_bottom.set_xlabel('X1', size=20, weight='bold')
 
     ax_main.spines[['right', 'top']].set_visible(False)
     for axis in ['bottom', 'left']:
@@ -122,21 +131,21 @@ def plot_figure(class0_x, class0_y, class1_x, class1_y, hospitalA_x, hospitalB_x
     handles_bottom, labels_bottom = ax_bottom.get_legend_handles_labels()
     combined_handles = [class0_handle, class1_handle] + handles_bottom
     combined_labels = ['Class 0', 'Class 1'] + labels_bottom
-    fig.legend(combined_handles, combined_labels, loc='upper right', bbox_to_anchor=(0.9, 0.9), frameon=False, prop={'size': 15})
+    fig.legend(combined_handles, combined_labels, loc='upper right', bbox_to_anchor=(0.9, 0.9), frameon=False, prop={'size': 20})
 
-    plt.savefig(f"figures/{figure_name}.svg")
+    plt.savefig(f"figures/{figure_name}.svg", transparent=True)
     # plt.show()
 
 # Plot both figures
 plot_figure(
-    [class0_groupA_x, class0_groupB_x], [class0_groupA_y, class0_groupB_y],
-    [class1_groupA_x, class1_groupB_x], [class1_groupA_y, class1_groupB_y],
+    [plot_class0_groupA_x, class0_groupB_x], [plot_class0_groupA_y, class0_groupB_y],
+    [plot_class1_groupA_x, class1_groupB_x], [plot_class1_groupA_y, class1_groupB_y],
     hospitalA_x, hospitalB_x, "shift_concept"
 )
 
 # Second figure with only Set A
 plot_figure(
-    [class0_groupA_x, None], [class0_groupA_y, None],
-    [class1_groupA_x, None], [class1_groupA_y, None],
+    [plot_class0_groupA_x, None], [plot_class0_groupA_y, None],
+    [plot_class1_groupA_x, None], [plot_class1_groupA_y, None],
     hospitalA_x, None, "shift_concept_setA_only"
 )
