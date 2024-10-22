@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional, List
 import matplotlib
 import numpy as np
 import optuna
+import pandas as pd
 import xgboost as xgb
 
 matplotlib.use('Agg')
@@ -64,6 +65,8 @@ class XGBClassifier(ClassificationModel):
             # self.plot_roc_curve(calibration_data, calibration_target, save_path="/home/local/USHERBROOKE/lefo2801/3pa_test_oym/3pa_upd/3PA/hosp/240308/auc_pre.png")
             if type(calibration_data) is xgb.DMatrix:
                 calibration_data = calibration_data.get_data().toarray()
+            elif isinstance(calibration_data, pd.DataFrame):
+                calibration_data = calibration_data.to_numpy()
             self.calibrate_model(y_pred=self.model.predict_proba(calibration_data)[:, 1],
                                  y_true=calibration_target,
                                  data=calibration_data)
@@ -82,11 +85,13 @@ class XGBClassifier(ClassificationModel):
                                           "{}".format(threshold))
 
     def predict_proba(self, X):
-        if type(X) is xgb.DMatrix:
-            X = X.get_data().toarray()
-
+        if isinstance(X, pd.DataFrame):
+            X = X.to_numpy()
         if self._calibration:
-            probability = self._calibration.predict_proba(X)
+            if type(X) is xgb.DMatrix:
+                probability = self._calibration.predict_proba(X.get_data().toarray())
+            else:
+                probability = self._calibration.predict_proba(X)
         else:
             probability = self.model.predict_proba(X)
         return probability
