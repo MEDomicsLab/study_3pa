@@ -82,11 +82,11 @@ class XGBClassifier(ClassificationModel):
                                           "{}".format(threshold))
 
     def predict_proba(self, X):
+        if type(X) is xgb.DMatrix:
+            X = X.get_data().toarray()
+
         if self._calibration:
-            if type(X) is xgb.DMatrix:
-                probability = self._calibration.predict_proba(X.get_data().toarray())
-            else:
-                probability = self._calibration.predict_proba(X)
+            probability = self._calibration.predict_proba(X)
         else:
             probability = self.model.predict_proba(X)
         return probability
