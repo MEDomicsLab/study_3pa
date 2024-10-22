@@ -24,8 +24,8 @@ params = {
 }
 
 # Import datasets
-mimic_df = pd.read_csv('datasets/in_hospital_mortality/mimic_filtered_data.csv').loc[0:600]
-eicu_df = pd.read_csv('datasets/in_hospital_mortality/eicu_filtered_data.csv').loc[0:600]
+mimic_df = pd.read_csv('datasets/in_hospital_mortality/mimic_filtered_data.csv')
+eicu_df = pd.read_csv('datasets/in_hospital_mortality/eicu_filtered_data.csv')
 
 # Remove hospitalid from mimic
 mimic_df = mimic_df.drop(columns=['hospitalid', 'stay_id'])

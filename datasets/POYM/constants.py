@@ -10,10 +10,10 @@ Description: Defines constants related to the dataset. Taken and adapted from th
 import re
 import pandas as pd
 
-from typing import Union, List
+from typing import Tuple, List
 
 
-def get_predictors(df: pd.DataFrame) -> Union[List, str]:
+def get_predictors(df: pd.DataFrame) -> Tuple[List[str], str, List[str]]:
     """
 
     """
@@ -46,4 +46,16 @@ def get_predictors(df: pd.DataFrame) -> Union[List, str]:
     # 244 PREDICTORS of HOMR
     PREDICTORS = OTHER_COLS + DX_COLS + ADM_COLS
 
-    return PREDICTORS, OYM
+    CONT_COLS = [
+        "age_original",
+        "ed_visit_count",
+        "ho_ambulance_count",
+        "total_duration"
+    ]
+
+    # Categorical variables
+    initial_CAT_COLS = [cat for cat in DX_COLS + ADM_COLS + OTHER_COLS if cat not in CONT_COLS]
+
+    CAT_COL = [cat for cat in initial_CAT_COLS if cat not in DX_COLS + ADM_COLS + ["has_dx"]]
+
+    return PREDICTORS, OYM, ['gender', 'living_status', 'admission_group', 'service_group']
