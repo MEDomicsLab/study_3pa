@@ -209,81 +209,82 @@ eicu_hospitals = eicu_df['hospitalid'].unique()
 for hospital_id in eicu_hospitals:
     eicu_hospital_df = eicu_df[eicu_df['hospitalid'] == hospital_id].drop(columns=['hospitalid'])
     samples_size = min(20, len(eicu_hospital_df))
+    if len(eicu_hospital_df) >= 20:
 
-    # Split into testing set (no need for training since we're using the MIMIC-trained model)
-    eicu_test = {}
-    eicu_test['x'] = eicu_hospital_df.reset_index(drop=True)
-    eicu_test['y'] = np.array(eicu_test['x'].pop('deceased'))
+        # Split into testing set (no need for training since we're using the MIMIC-trained model)
+        eicu_test = {}
+        eicu_test['x'] = eicu_hospital_df.reset_index(drop=True)
+        eicu_test['y'] = np.array(eicu_test['x'].pop('deceased'))
 
-    # K-NN Imputation on eICU testing data
-    eicu_test['x'] = pd.DataFrame(imputer.transform(eicu_test['x']),
-                                  columns=eicu_test['x'].columns)
+        # K-NN Imputation on eICU testing data
+        eicu_test['x'] = pd.DataFrame(imputer.transform(eicu_test['x']),
+                                      columns=eicu_test['x'].columns)
 
-    # Round imputed binary variables
-    eicu_test['x'][variables_to_round] = eicu_test['x'][variables_to_round].round()
+        # Round imputed binary variables
+        eicu_test['x'][variables_to_round] = eicu_test['x'][variables_to_round].round()
 
-    # Apply SAPS transformation
-    eicu_test['x'] = apply_saps(eicu_test['x'], params['to_saps_score'])
+        # Apply SAPS transformation
+        eicu_test['x'] = apply_saps(eicu_test['x'], params['to_saps_score'])
 
-    # Initialize DatasetsManager for eICU
-    datasets = DatasetsManager()
+        # Initialize DatasetsManager for eICU
+        datasets = DatasetsManager()
 
-    # Load the MIMIC training and reference data (same for all hospitals)
-    datasets.set_from_data(dataset_type="training", observations=mimic_0813_train['x'].to_numpy(),
-                           true_labels=mimic_0813_train['y'],
-                           column_labels=mimic_0813_train['x'].columns)
-    datasets.set_from_data(dataset_type="reference", observations=mimic_0813_test['x'].to_numpy(),
-                           true_labels=mimic_0813_test['y'],
-                           column_labels=mimic_0813_test['x'].columns)
+        # Load the MIMIC training and reference data (same for all hospitals)
+        datasets.set_from_data(dataset_type="training", observations=mimic_0813_train['x'].to_numpy(),
+                               true_labels=mimic_0813_train['y'],
+                               column_labels=mimic_0813_train['x'].columns)
+        datasets.set_from_data(dataset_type="reference", observations=mimic_0813_test['x'].to_numpy(),
+                               true_labels=mimic_0813_test['y'],
+                               column_labels=mimic_0813_test['x'].columns)
 
-    # Set eICU hospital-specific test data as 'testing'
-    datasets.set_from_data(dataset_type="testing", observations=eicu_test['x'].to_numpy(),
-                           true_labels=eicu_test['y'],
-                           column_labels=eicu_test['x'].columns)
+        # Set eICU hospital-specific test data as 'testing'
+        datasets.set_from_data(dataset_type="testing", observations=eicu_test['x'].to_numpy(),
+                               true_labels=eicu_test['y'],
+                               column_labels=eicu_test['x'].columns)
 
-    # Execute the MED3PA experiment for the current eICU hospital
-    results = Med3paExperiment.run(
-        datasets_manager=datasets,
-        base_model_manager=base_model_manager,  # Use the already-trained MIMIC BaseModel
-        uncertainty_metric="sigmoidal_error",
-        ipc_type='EnsembleRandomForestRegressor',
-        ipc_params=ipc_params,
-        apc_params=apc_params,
-        ipc_grid_params=ipc_grid,
-        apc_grid_params=apc_grid,
-        samples_ratio_min=0,
-        samples_ratio_max=10,
-        samples_ratio_step=5,
-        evaluate_models=True,
-    )
+        # Execute the MED3PA experiment for the current eICU hospital
+        results = Med3paExperiment.run(
+            datasets_manager=datasets,
+            base_model_manager=base_model_manager,  # Use the already-trained MIMIC BaseModel
+            uncertainty_metric="sigmoidal_error",
+            ipc_type='EnsembleRandomForestRegressor',
+            ipc_params=ipc_params,
+            apc_params=apc_params,
+            ipc_grid_params=ipc_grid,
+            apc_grid_params=apc_grid,
+            samples_ratio_min=0,
+            samples_ratio_max=10,
+            samples_ratio_step=5,
+            evaluate_models=True,
+        )
 
-    # Save results for the current hospital
-    results.save(file_path=f'experiments/results/in_hospital_mortality/External/eicu_hospital_{hospital_id}')
+        # Save results for the current hospital
+        results.save(file_path=f'experiments/results/in_hospital_mortality/External/eicu_hospital_{hospital_id}')
 
-    # Optionally run MED3PA Detectron experiment
-    med3pa_detectron_results = Med3paDetectronExperiment.run(
-        datasets=datasets,
-        base_model_manager=base_model_manager,  # Use the already-trained MIMIC BaseModel
-        uncertainty_metric="sigmoidal_error",
-        ipc_type='EnsembleRandomForestRegressor',
-        ipc_params=ipc_params,
-        apc_params=apc_params,
-        ipc_grid_params=ipc_grid,
-        apc_grid_params=apc_grid,
-        samples_size=samples_size,
-        ensemble_size=10,
-        num_calibration_runs=100,
-        patience=3,
-        test_strategies="enhanced_disagreement_strategy",
-        allow_margin=False,
-        margin=0.05,
-        samples_ratio_min=0,
-        samples_ratio_max=10,
-        samples_ratio_step=5,
-        evaluate_models=True,
-    )
+        # Optionally run MED3PA Detectron experiment
+        med3pa_detectron_results = Med3paDetectronExperiment.run(
+            datasets=datasets,
+            base_model_manager=base_model_manager,  # Use the already-trained MIMIC BaseModel
+            uncertainty_metric="sigmoidal_error",
+            ipc_type='EnsembleRandomForestRegressor',
+            ipc_params=ipc_params,
+            apc_params=apc_params,
+            ipc_grid_params=ipc_grid,
+            apc_grid_params=apc_grid,
+            samples_size=samples_size,
+            ensemble_size=10,
+            num_calibration_runs=100,
+            patience=3,
+            test_strategies="enhanced_disagreement_strategy",
+            allow_margin=False,
+            margin=0.05,
+            samples_ratio_min=0,
+            samples_ratio_max=10,
+            samples_ratio_step=5,
+            evaluate_models=True,
+        )
 
-    # Save the Detectron results for the current hospital
-    med3pa_detectron_results.save(file_path=f'experiments/results/in_hospital_mortality/External/with_detectron'
-                                            f'/eicu_hospital_{hospital_id}')
+        # Save the Detectron results for the current hospital
+        med3pa_detectron_results.save(file_path=f'experiments/results/in_hospital_mortality/External/with_detectron'
+                                                f'/eicu_hospital_{hospital_id}')
 
