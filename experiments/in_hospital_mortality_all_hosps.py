@@ -203,14 +203,12 @@ apc_params = {'max_depth': 3}
 #         med3pa_detectron_results.save(file_path=f'experiments/results/in_hospital_mortality/with_detectron/{data_name}')
 
 # ## eICU EXPERIMENT USING MIMIC-TRAINED BASEMODEL
-# Split eICU dataset by hospitalid
-eicu_hospitals = eicu_df['hospitalid'].unique()
 
 # Apply the same preprocessing steps as MIMIC for eICU
 samples_size = 20
 # Split into testing set (no need for training since we're using the MIMIC-trained model)
 eicu_test = {}
-eicu_test['x'] = eicu_df.reset_index(drop=True)
+eicu_test['x'] = eicu_df.reset_index(drop=True).drop(columns=['hospitalid'])
 eicu_test['y'] = np.array(eicu_test['x'].pop('deceased'))
 
 # K-NN Imputation on eICU testing data
