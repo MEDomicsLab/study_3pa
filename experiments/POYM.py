@@ -147,7 +147,7 @@ def poym_experiment():
         ensemble_size=10,
         num_calibration_runs=100,
         patience=3,
-        test_strategies="enhanced_disagreement_strategy",
+        test_strategies=["original_disagreement_strategy", "mannwhitney_strategy", "enhanced_disagreement_strategy"],
         allow_margin=False,
         margin=0.05,
         samples_ratio_min=0,
