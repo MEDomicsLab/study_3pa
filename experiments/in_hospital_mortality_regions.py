@@ -118,10 +118,10 @@ ipc_grid = {
 
 }
 apc_grid = {
-    'max_depth': [2, 3, 4, 5],
+    # 'max_depth': [2, 3, 4, 5],
     'min_samples_leaf': [1, 2, 4]
 }
-apc_params = {'max_depth': 3}
+apc_params = {'max_depth': 6}
 
 # # Loop over datasets
 # for data_name, data_dict in {'Internal': mimic_0813_test,

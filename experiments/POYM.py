@@ -93,10 +93,10 @@ def poym_experiment():
         'min_samples_leaf': [1, 2, 4]
     }
     apc_grid = {
-        'max_depth': [2, 3, 4, 5],
+        # 'max_depth': [2, 3, 4, 5],
         'min_samples_leaf': [1, 2, 4]
     }
-    apc_params = {'max_depth': 3}
+    apc_params = {'max_depth': 6}
 
     # Initialize the DatasetsManager
     datasets = DatasetsManager()
