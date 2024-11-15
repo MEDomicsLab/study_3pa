@@ -1,6 +1,6 @@
 import argparse
 
-from run_tests.send_mail import send_email
+from run_tests.send_email import send_email
 from run_tests.execute_script import run_initial_script
 
 
