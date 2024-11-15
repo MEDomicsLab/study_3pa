@@ -35,7 +35,7 @@ def main():
     script_output = run_initial_script(script_path)
 
     # Send the email with the results
-    # send_email(subject, script_output, to_email, from_email, smtp_server, smtp_port, smtp_user, smtp_password)
+    send_email(subject, script_output, to_email, from_email, smtp_server, smtp_port, smtp_user, smtp_password)
 
 
 if __name__ == "__main__":
