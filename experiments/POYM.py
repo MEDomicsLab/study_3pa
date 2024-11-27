@@ -59,13 +59,13 @@ def poym_experiment():
     df_reference = df_train[df_train['patient_id'].isin(reference_ids)].reset_index(drop=True)
     df_train = df_train[df_train['patient_id'].isin(train_ids)].reset_index(drop=True)
 
-    train_data = {'x': df_train[predictors],
+    train_data = {'x': df_train[predictors].to_numpy(),
                   'y': df_train[target].to_numpy()}
 
-    test_data = {'x': df_holdout[predictors],
+    test_data = {'x': df_holdout[predictors].to_numpy(),
                  'y': df_holdout[target].to_numpy()}
 
-    reference_data = {'x': df_reference[predictors],
+    reference_data = {'x': df_reference[predictors].to_numpy(),
                       'y': df_reference[target].to_numpy()}
 
     # get BaseModel
