@@ -60,13 +60,16 @@ def poym_experiment():
     df_train = df_train[df_train['patient_id'].isin(train_ids)].reset_index(drop=True)
 
     train_data = {'x': df_train[predictors].to_numpy(),
-                  'y': df_train[target].to_numpy()}
+                  'y': df_train[target].to_numpy(),
+                  'columns': predictors}
 
     test_data = {'x': df_holdout[predictors].to_numpy(),
-                 'y': df_holdout[target].to_numpy()}
+                 'y': df_holdout[target].to_numpy(),
+                 'columns': predictors}
 
     reference_data = {'x': df_reference[predictors].to_numpy(),
-                      'y': df_reference[target].to_numpy()}
+                      'y': df_reference[target].to_numpy(),
+                      'columns': predictors}
 
     # get BaseModel
     if not params['fit_baseModel']:
@@ -103,15 +106,15 @@ def poym_experiment():
 
     datasets.set_from_data(dataset_type="training", observations=train_data['x'],
                            true_labels=train_data['y'],
-                           column_labels=train_data['x'].columns)
+                           column_labels=train_data['columns'])
 
     datasets.set_from_data(dataset_type="reference", observations=reference_data['x'],
                            true_labels=reference_data['y'],
-                           column_labels=reference_data['x'].columns)
+                           column_labels=reference_data['columns'])
 
     datasets.set_from_data(dataset_type="testing", observations=test_data['x'],
                            true_labels=test_data['y'],
-                           column_labels=test_data['x'].columns)
+                           column_labels=test_data['columns'])
 
     # Execute the MED3PA experiment
     # print(f"Starting Med3PA experiment :{datetime.now()}")
