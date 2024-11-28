@@ -101,15 +101,15 @@ def poym_experiment():
     # Initialize the DatasetsManager
     datasets = DatasetsManager()
 
-    datasets.set_from_data(dataset_type="training", observations=train_data['x'].to_numpy(),
+    datasets.set_from_data(dataset_type="training", observations=train_data['x'],
                            true_labels=train_data['y'],
                            column_labels=train_data['x'].columns)
 
-    datasets.set_from_data(dataset_type="reference", observations=reference_data['x'].to_numpy(),
+    datasets.set_from_data(dataset_type="reference", observations=reference_data['x'],
                            true_labels=reference_data['y'],
                            column_labels=reference_data['x'].columns)
 
-    datasets.set_from_data(dataset_type="testing", observations=test_data['x'].to_numpy(),
+    datasets.set_from_data(dataset_type="testing", observations=test_data['x'],
                            true_labels=test_data['y'],
                            column_labels=test_data['x'].columns)
 
