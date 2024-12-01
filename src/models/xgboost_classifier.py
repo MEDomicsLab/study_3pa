@@ -5,6 +5,7 @@ import numpy as np
 import optuna
 import pandas as pd
 import xgboost as xgb
+optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
