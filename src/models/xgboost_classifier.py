@@ -51,8 +51,11 @@ class XGBClassifier(ClassificationModel):
             data = data.drop(columns=['target'])
 
         study.optimize(self._objective_fct(data, target), n_trials=n_trials, timeout=timeout)
-        best_trial = study.best_trial
-        params = best_trial.params
+        if len(study.trials) == 0 or all(t.state != optuna.trial.TrialState.COMPLETE for t in study.trials):
+            params = {}
+        else:
+            best_trial = study.best_trial
+            params = best_trial.params
         params['objective'] = self._objective
         self.set_params(params)
         self.model = xgb.XGBClassifier(**params)
