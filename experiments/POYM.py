@@ -90,11 +90,11 @@ def poym_experiment():
 
     # Define parameters for the experiment
     ipc_params = {'n_estimators': 100}
-    ipc_grid = {
-        'n_estimators': [50, 100, 200],
-        'max_depth': [2, 3, 4, 5],
-        'min_samples_leaf': [1, 2, 4]
-    }
+    ipc_grid = None  # {
+    #     'n_estimators': [50, 100, 200],
+    #     'max_depth': [2, 3, 4, 5],
+    #     'min_samples_leaf': [1, 2, 4]
+    # }
     apc_grid = {
         # 'max_depth': [2, 3, 4, 5],
         'min_samples_leaf': [1, 2, 4]
