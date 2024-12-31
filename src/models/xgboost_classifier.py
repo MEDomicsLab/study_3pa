@@ -156,7 +156,7 @@ class XGBClassifier(ClassificationModel):
             # metric = np.mean(cross_val_score(xgb.XGBClassifier(random_state=self._random_state, **param), data,
             #                                  target, scoring='roc_auc',
             #                                  fit_params={'sample_weight': samples_weights}))
-            if metric is np.nan:
+            if np.isnan(metric):
                 return 0
             return metric
 

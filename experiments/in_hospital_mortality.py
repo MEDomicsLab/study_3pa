@@ -3,6 +3,7 @@ Create experiments for the in-hospital mortality problem using MIMIC and eICU da
 """
 
 import pandas as pd
+import pickle
 import numpy as np
 
 from MED3pa.datasets import DatasetsManager
@@ -21,6 +22,7 @@ params = {
     'main_seed': 42,
     'threshold': 'auc',  # Whether to apply threshold correction in the BaseModel or not. Options: ['auc', None]
     'to_saps_score': False  # True to convert variables to Saps scores, False to keep original variable value
+    'fit_baseModel': False
 }
 
 # Import datasets
@@ -88,17 +90,28 @@ for df in [mimic_0813_train, mimic_0813_test, mimic_1416, mimic_1719]:
 for df in [mimic_0813_train, mimic_0813_test, mimic_1416, mimic_1719]:
     df['x'] = apply_saps(df['x'], params['to_saps_score'])
 
-# Train BaseModel
-baseMdl = XGBClassifier(objective='binary:logistic',
-                        random_state=params['main_seed'],
-                        class_weighting=params['class_weighting'])
-baseMdl.fit(mimic_0813_train['x'], mimic_0813_train['y'],
-            threshold=params['threshold'],
-            calibrate=params['calibrate'],
-            n_trials=200)
+# get BaseModel
+if not params['fit_baseModel']:
+    try:
+        baseMdl = pickle.load(open('datasets/in_hospital_mortality/clf.pkl', 'rb'))
+    except FileNotFoundError:
+        baseMdl = None
+
+if params['fit_baseModel'] or baseMdl is None:
+    print(f"Starting BaseModel training :")
+    # Train BaseModel
+    baseMdl = XGBClassifier(objective='binary:logistic',
+                            random_state=params['main_seed'],
+                            class_weighting=params['class_weighting'])
+    baseMdl.fit(mimic_0813_train['x'], mimic_0813_train['y'],
+                threshold=params['threshold'],
+                calibrate=params['calibrate'],
+                n_trials=200)
+    pickle.dump(baseMdl, open('datasets/in_hospital_mortality/clf.pkl', 'wb'))
 
 # Get BaseModel global performance metrics
 baseMdlRes = baseMdl.evaluate(mimic_0813_test['x'], mimic_0813_test['y'])
+print(f"BaseModel metrics: {baseMdlRes}")
 
 # ## MED3pa section
 # Set the base model using BaseModelManager
