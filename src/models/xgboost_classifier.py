@@ -152,7 +152,10 @@ class XGBClassifier(ClassificationModel):
             if params is not None:
                 param.update(params)
 
-            metric = np.mean(xgb.cv(params=param, dtrain=dtrain, nfold=5, metrics='auc')['test-auc-mean'])
+            try:
+                metric = np.mean(xgb.cv(params=param, dtrain=dtrain, nfold=5, metrics='auc')['test-auc-mean'])
+            except:
+                metric = 0
             # metric = np.mean(cross_val_score(xgb.XGBClassifier(random_state=self._random_state, **param), data,
             #                                  target, scoring='roc_auc',
             #                                  fit_params={'sample_weight': samples_weights}))
