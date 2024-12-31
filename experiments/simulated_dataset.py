@@ -113,6 +113,7 @@ def simulated_data_experiment():
         samples_ratio_max=10,
         samples_ratio_step=5,
         evaluate_models=True,
+        prev_med3pa_results=results
     )
 
     # Save the results to a specified directory
