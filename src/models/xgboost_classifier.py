@@ -105,6 +105,7 @@ class XGBClassifier(ClassificationModel):
         params = self.get_params()
 
         def __objective(trial):
+            return 0
             param = {
                 "device": "cpu",
                 "verbosity": 0,
