@@ -114,7 +114,9 @@ class RandomForestOptunaClassifier(ClassificationModel):
 
             clf = RandomForestClassifier(**param, random_state=self._random_state)
             try:
-                auc = np.mean(cross_val_score(clf, data, target, cv=5, scoring='roc_auc'))
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    auc = np.mean(cross_val_score(clf, data, target, cv=5, scoring='roc_auc'))
             except:
                 return 0
 
