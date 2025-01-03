@@ -1,9 +1,8 @@
+import warnings
 from typing import Any, Dict, Optional
 import optuna
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 from copy import deepcopy
 
@@ -54,6 +53,9 @@ class RandomForestOptunaClassifier(ClassificationModel):
 
         if threshold:
             self._set_optimal_threshold(data, target, threshold)
+        warnings.warn(
+            "The model has been trained succesfully"
+        )
 
         return self
 
