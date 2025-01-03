@@ -111,7 +111,13 @@ class RandomForestOptunaClassifier(ClassificationModel):
                 random_state = self._random_state
 
             clf = RandomForestClassifier(**param, random_state=self._random_state)
-            auc = np.mean(cross_val_score(clf, data, target, cv=5, scoring='roc_auc'))
+            try:
+                auc = np.mean(cross_val_score(clf, data, target, cv=5, scoring='roc_auc'))
+            except:
+                return 0
+
+            if np.isnan(auc):
+                return 0
             return auc
 
         return __objective
