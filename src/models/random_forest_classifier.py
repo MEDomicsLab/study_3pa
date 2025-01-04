@@ -19,41 +19,40 @@ class RandomForestOptunaClassifier(ClassificationModel):
     def fit(self, data, target, n_trials=100, timeout: int = None, threshold: str = None, calibrate: bool = False,
             training_parameters: dict = None, balance_train_classes: bool = None, weights: np.ndarray = None):
 
-        # if balance_train_classes is not None:
-        #     self._class_weighting = balance_train_classes
-        #
-        # if training_parameters:
-        #     if self.params is not None:
-        #         self.params.update(training_parameters)
-        #     else:
-        #         self.set_params(training_parameters)
-        #
-        # optuna.logging.set_verbosity(optuna.logging.WARNING)
-        # if self._random_state:
-        #     study = optuna.create_study(direction="maximize",
-        #                                 sampler=optuna.samplers.TPESampler(seed=self._random_state))
-        # else:
-        #     study = optuna.create_study(direction="maximize")
-        #
-        # if calibrate:
-        #     data, target, calibration_data, calibration_target = self._split_calibration_data(data, target)
-        #
-        # study.optimize(self._objective_fct(data, target), n_trials=n_trials, timeout=timeout)
-        # best_trial = study.best_trial
-        # params = best_trial.params
-        params={}
+        if balance_train_classes is not None:
+            self._class_weighting = balance_train_classes
+
+        if training_parameters:
+            if self.params is not None:
+                self.params.update(training_parameters)
+            else:
+                self.set_params(training_parameters)
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        if self._random_state:
+            study = optuna.create_study(direction="maximize",
+                                        sampler=optuna.samplers.TPESampler(seed=self._random_state))
+        else:
+            study = optuna.create_study(direction="maximize")
+
+        if calibrate:
+            data, target, calibration_data, calibration_target = self._split_calibration_data(data, target)
+
+        study.optimize(self._objective_fct(data, target), n_trials=n_trials, timeout=timeout)
+        best_trial = study.best_trial
+        params = best_trial.params
         self.set_params(params)
         self.model = RandomForestClassifier(**params, random_state=self._random_state)
 
         self.model.fit(data, target, sample_weight=weights)
 
-        # if calibrate:
-        #     self.calibrate_model(y_pred=self.model.predict_proba(calibration_data)[:, 1],
-        #                          y_true=calibration_target,
-        #                          data=calibration_data)
-        #
-        # if threshold:
-        #     self._set_optimal_threshold(data, target, threshold)
+        if calibrate:
+            self.calibrate_model(y_pred=self.model.predict_proba(calibration_data)[:, 1],
+                                 y_true=calibration_target,
+                                 data=calibration_data)
+
+        if threshold:
+            self._set_optimal_threshold(data, target, threshold)
 
         return self
 
@@ -110,7 +109,7 @@ class RandomForestOptunaClassifier(ClassificationModel):
             else:
                 random_state = self._random_state
 
-            clf = RandomForestClassifier(**param, random_state=self._random_state)
+            clf = RandomForestClassifier(**param, random_state=random_state)
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
