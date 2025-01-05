@@ -21,7 +21,7 @@ params = {
     'class_weighting': True,  # Whether to apply class weighting correction in the BaseModel or not
     'main_seed': 42,
     'threshold': 'auc',  # Whether to apply threshold correction in the BaseModel or not. Options: ['auc', None]
-    'to_saps_score': False  # True to convert variables to Saps scores, False to keep original variable value
+    'to_saps_score': False,  # True to convert variables to Saps scores, False to keep original variable value
     'fit_baseModel': False
 }
 
