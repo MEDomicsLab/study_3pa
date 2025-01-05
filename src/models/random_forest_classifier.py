@@ -29,7 +29,11 @@ class RandomForestOptunaClassifier(ClassificationModel):
                 self.set_params(training_parameters)
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
-        if self._random_state:
+        if 'seed' in self.params:
+            self._random_state = self.params['seed']
+        elif 'random_state' in self.params:
+            self._random_state = self.params['random_state']
+        if self._random_state is not None:
             study = optuna.create_study(direction="maximize",
                                         sampler=optuna.samplers.TPESampler(seed=self._random_state))
         else:
@@ -39,10 +43,16 @@ class RandomForestOptunaClassifier(ClassificationModel):
             data, target, calibration_data, calibration_target = self._split_calibration_data(data, target)
 
         study.optimize(self._objective_fct(data, target), n_trials=n_trials, timeout=timeout)
-        best_trial = study.best_trial
-        params = best_trial.params
-        self.set_params(params)
-        self.model = RandomForestClassifier(**params, random_state=self._random_state)
+        if len(study.trials) == 0 or all(t.state != optuna.trial.TrialState.COMPLETE for t in study.trials):
+            params = {'random_state': self._random_state}
+        else:
+            best_trial = study.best_trial
+            params = best_trial.params
+        # best_trial = study.best_trial
+        # params = best_trial.params
+        self.params.update(params)
+        # self.set_params(params)
+        self.model = RandomForestClassifier(**params)  # , random_state=self._random_state)
 
         self.model.fit(data, target, sample_weight=weights)
 
@@ -85,7 +95,7 @@ class RandomForestOptunaClassifier(ClassificationModel):
         return probability
 
     def _objective_fct(self, data, target):
-        params = self.get_params()
+        params_global = self.get_params()
         def __objective(trial):
             param = {
                 "n_estimators": trial.suggest_int("n_estimators", 50, 200),
@@ -99,17 +109,17 @@ class RandomForestOptunaClassifier(ClassificationModel):
             if self._class_weighting:
                 param["class_weight"] = "balanced"
 
-            if params is not None:
-                param.update(params)
+            # if params is not None:
+            #     param.update(params)
 
-            if 'seed' in param:
-                random_state = param.pop('seed')
+            if 'seed' in params_global:
+                param['random_state'] = params_global['seed']
             elif 'random_state' in param:
-                random_state = param.pop('random_state')
+                param['random_state'] = params_global['random_state']
             else:
-                random_state = self._random_state
+                param['random_state'] = self._random_state
 
-            clf = RandomForestClassifier(**param, random_state=random_state)
+            clf = RandomForestClassifier(**param)
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")

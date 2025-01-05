@@ -34,7 +34,11 @@ class XGBClassifier(ClassificationModel):
                 self.set_params(training_parameters)
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
-        if self._random_state:
+        if 'seed' in self.params:
+            self._random_state = self.params['seed']
+        elif 'random_state' in self.params:
+            self._random_state = self.params['random_state']
+        if self._random_state is not None:
             study = optuna.create_study(direction="maximize",
                                         sampler=optuna.samplers.TPESampler(seed=self._random_state))
         else:
@@ -53,7 +57,7 @@ class XGBClassifier(ClassificationModel):
 
         study.optimize(self._objective_fct(data, target), n_trials=n_trials, timeout=timeout)
         if len(study.trials) == 0 or all(t.state != optuna.trial.TrialState.COMPLETE for t in study.trials):
-            params = {}
+            params = {'seed': self._random_state}
         else:
             best_trial = study.best_trial
             params = best_trial.params
@@ -102,7 +106,7 @@ class XGBClassifier(ClassificationModel):
 
     def _objective_fct(self, data, target):
         dtrain = xgb.DMatrix(data, label=target)
-        params = self.get_params()
+        params_global = self.get_params()
 
         def __objective(trial):
             param = {
@@ -139,7 +143,13 @@ class XGBClassifier(ClassificationModel):
                 param["rate_drop"] = trial.suggest_float("rate_drop", 1e-8, 1.0, log=True)
                 param["skip_drop"] = trial.suggest_float("skip_drop", 1e-8, 1.0, log=True)
 
-            param['random_state'] = self._random_state
+            if 'seed' in params_global:
+                seed = params_global['seed']
+            elif 'random_state' in params_global:
+                seed = params_global['random_state']
+            else:
+                seed = self._random_state
+            param['seed'] = seed
 
             if self._class_weighting:
                 param['scale_pos_weight'] = len(target[target == 0]) / len(target[target == 1])
@@ -149,11 +159,12 @@ class XGBClassifier(ClassificationModel):
             #     )
             # else:
             #     samples_weights = None
-            if params is not None:
-                param.update(params)
+            # if params is not None:
+            #     param.update(params)
 
             try:
-                metric = np.mean(xgb.cv(params=param, dtrain=dtrain, nfold=5, metrics='auc')['test-auc-mean'])
+                metric = np.mean(xgb.cv(params=param, dtrain=dtrain, nfold=5, metrics='auc',
+                                        seed=seed)['test-auc-mean'])
             except:
                 metric = 0
             # metric = np.mean(cross_val_score(xgb.XGBClassifier(random_state=self._random_state, **param), data,
