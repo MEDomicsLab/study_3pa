@@ -32,6 +32,8 @@ class XGBClassifier(ClassificationModel):
                 self.params.update(training_parameters)
             else:
                 self.set_params(training_parameters)
+        else:
+            self.set_params()
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         if 'seed' in self.params:
