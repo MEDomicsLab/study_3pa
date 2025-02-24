@@ -20,7 +20,10 @@ from sklearn.model_selection import train_test_split
 
 # Constants
 params = {
+    'calibrate': True,  # Whether to apply calibration correction to the BaseModel or not
+    'class_weighting': True,  # Whether to apply class weighting correction in the BaseModel or not
     'main_seed': 42,
+    'threshold': 'auc',  # Whether to apply threshold correction in the BaseModel or not. Options: ['auc', None]
     'fit_baseModel': False
 }
 
@@ -80,7 +83,12 @@ def poym_experiment():
 
     if params['fit_baseModel'] or clf is None:
         print(f"Starting BaseModel training :{datetime.now()}")
-        clf = RandomForestOptunaClassifier(random_state=params['main_seed']).fit(train_data['x'], train_data['y'])
+        clf = RandomForestOptunaClassifier(random_state=params['main_seed'],
+                                           class_weighting=params['class_weighting']
+                                           ).fit(train_data['x'],
+                                                 train_data['y'],
+                                                 calibrate=params['calibrate'],
+                                                 threshold=params['threshold'])
         pickle.dump(clf, open('datasets/POYM/clf.pkl', 'wb'))
 
     # ## MED3pa section
@@ -136,32 +144,32 @@ def poym_experiment():
     # Save the results to a specified directory
     med3pa_results.save(file_path=f'experiments/results/poym')
 
-    # Execute the Med3pa experiment with Detectron results
-    med3pa_detectron_results = Med3paDetectronExperiment.run(
-        datasets=datasets,
-        base_model_manager=base_model_manager,
-        uncertainty_metric="sigmoidal_error",
-        ipc_type='EnsembleRandomForestRegressor',
-        ipc_params=ipc_params,
-        apc_params=apc_params,
-        ipc_grid_params=ipc_grid,
-        apc_grid_params=apc_grid,
-        samples_size=20,
-        ensemble_size=10,
-        num_calibration_runs=100,
-        patience=3,
-        test_strategies=["original_disagreement_strategy", "mannwhitney_strategy", "enhanced_disagreement_strategy"],
-        allow_margin=False,
-        margin=0.05,
-        samples_ratio_min=0,
-        samples_ratio_max=10,
-        samples_ratio_step=5,
-        evaluate_models=True,
-        prev_med3pa_results=med3pa_results
-    )
-
-    # Save the results to a specified directory
-    med3pa_detectron_results.save(file_path=f'experiments/results/poym/with_detectron')
+    # # Execute the Med3pa experiment with Detectron results
+    # med3pa_detectron_results = Med3paDetectronExperiment.run(
+    #     datasets=datasets,
+    #     base_model_manager=base_model_manager,
+    #     uncertainty_metric="sigmoidal_error",
+    #     ipc_type='EnsembleRandomForestRegressor',
+    #     ipc_params=ipc_params,
+    #     apc_params=apc_params,
+    #     ipc_grid_params=ipc_grid,
+    #     apc_grid_params=apc_grid,
+    #     samples_size=20,
+    #     ensemble_size=10,
+    #     num_calibration_runs=100,
+    #     patience=3,
+    #     test_strategies=["original_disagreement_strategy", "mannwhitney_strategy", "enhanced_disagreement_strategy"],
+    #     allow_margin=False,
+    #     margin=0.05,
+    #     samples_ratio_min=0,
+    #     samples_ratio_max=10,
+    #     samples_ratio_step=5,
+    #     evaluate_models=True,
+    #     prev_med3pa_results=med3pa_results
+    # )
+    #
+    # # Save the results to a specified directory
+    # med3pa_detectron_results.save(file_path=f'experiments/results/poym/with_detectron')
 
 
 if __name__ == '__main__':
