@@ -62,7 +62,7 @@ def poym_experiment():
     df_reference = df_train[df_train['patient_id'].isin(reference_ids)].reset_index(drop=True)
     df_train = df_train[df_train['patient_id'].isin(train_ids)].reset_index(drop=True)
 
-    train_data = {'x': df_train[predictors].to_numpy(),
+    train_data = {'x': df_train[predictors],
                   'y': df_train[target].to_numpy(),
                   'columns': predictors}
 
@@ -112,7 +112,7 @@ def poym_experiment():
     # Initialize the DatasetsManager
     datasets = DatasetsManager()
 
-    datasets.set_from_data(dataset_type="training", observations=train_data['x'],
+    datasets.set_from_data(dataset_type="training", observations=train_data['x'].to_numpy(),
                            true_labels=train_data['y'],
                            column_labels=train_data['columns'])
 
