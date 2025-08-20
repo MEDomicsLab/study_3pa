@@ -2,6 +2,7 @@ import warnings
 from typing import Any, Dict, Optional
 import optuna
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 from copy import deepcopy
@@ -11,13 +12,16 @@ from MED3pa.models.abstract_models import ClassificationModel
 
 class RandomForestOptunaClassifier(ClassificationModel):
     def __init__(self, objective: str = 'binary:logistic', class_weighting: bool = False, random_state: int = None,
-                 **params):
-        super().__init__(objective=objective, class_weighting=class_weighting, random_state=random_state)
+                 verbose: bool = False, **params):
+        super().__init__(objective=objective, class_weighting=class_weighting, random_state=random_state,
+                         verbose=verbose)
         self.model_class = RandomForestClassifier
         self.set_params(**params)
+        self.pickled_model = True
 
-    def fit(self, data, target, n_trials=100, timeout: int = None, threshold: str = None, calibrate: bool = False,
-            training_parameters: dict = None, balance_train_classes: bool = None, weights: np.ndarray = None):
+    def fit(self, data: pd.DataFrame, target: np.ndarray, n_trials: int = 100, timeout: int = None,
+            threshold: str | None = None, calibrate: bool = False, training_parameters: dict | None = None,
+            balance_train_classes: bool | None = None, weights: np.ndarray | None = None):
 
         if balance_train_classes is not None:
             self._class_weighting = balance_train_classes
@@ -59,8 +63,7 @@ class RandomForestOptunaClassifier(ClassificationModel):
         self.model.fit(data, target, sample_weight=weights)
 
         if calibrate:
-            self.calibrate_model(y_pred=self.model.predict_proba(calibration_data)[:, 1],
-                                 y_true=calibration_target,
+            self.calibrate_model(y_true=calibration_target,
                                  data=calibration_data)
 
         if threshold:
@@ -68,7 +71,7 @@ class RandomForestOptunaClassifier(ClassificationModel):
 
         return self
 
-    def _split_calibration_data(self, data, target, frac=0.3):
+    def _split_calibration_data(self, data: pd.DataFrame, target: np.ndarray, frac: float = 0.3):
         data = deepcopy(data)
         target = deepcopy(target)
         data['target'] = target
@@ -80,7 +83,14 @@ class RandomForestOptunaClassifier(ClassificationModel):
         data = data.drop(columns=['target'])
         return data, target, calibration_data, calibration_target
 
-    def _set_optimal_threshold(self, data, target, threshold):
+    def _set_optimal_threshold(self, data: pd.DataFrame, target: np.ndarray, threshold: str) -> None:
+        """
+        Sets the optimal classification threshold for the given threshold strategy
+        :param data: Data used for threshold optimization
+        :param target: Target to be predicted
+        :param threshold: Chosen threshold strategy, options: ['auc', 'auprc']
+        :return:
+        """
         predicted = self.predict_proba(data)[:, 1]
         if threshold.lower() == 'auc':
             self._threshold = self._optimal_threshold_auc(target=target, predicted=predicted)
@@ -89,14 +99,19 @@ class RandomForestOptunaClassifier(ClassificationModel):
         else:
             raise NotImplementedError
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        """
+        Predicts the probability of each class.
+        :param X:
+        :return:
+        """
         if self._calibration:
             probability = self._calibration.predict_proba(X)
         else:
             probability = self.model.predict_proba(X)
         return probability
 
-    def _objective_fct(self, data, target):
+    def _objective_fct(self, data: pd.DataFrame, target: np.ndarray) -> float:
         params_global = self.get_params()
         def __objective(trial):
             param = {
@@ -122,12 +137,9 @@ class RandomForestOptunaClassifier(ClassificationModel):
                 param['random_state'] = self._random_state
 
             clf = RandomForestClassifier(**param)
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    auc = np.mean(cross_val_score(clf, data, target, cv=5, scoring='roc_auc'))
-            except:
-                return 0
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                auc = np.mean(cross_val_score(clf, data, target, cv=5, scoring='roc_auc'))
 
             if np.isnan(auc):
                 return 0

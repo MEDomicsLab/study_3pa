@@ -4,6 +4,7 @@
     @Description:       This file contains helpful functions to preprocess datasets based on the
                         SAPS-II mortality score (https://www.mdcalc.com/simplified-acute-physiology-score-saps-ii)
 """
+
 import numpy as np
 from pandas import DataFrame
 from typing import Tuple
@@ -278,8 +279,8 @@ def transform_pao2fio2(pao2fio2: float, cpap: int, vent: int, convert_score: boo
 
     :return: related SAPS-II score
     """
-    if not convert_score:
-        return pao2fio2
+    # if not convert_score:  # Force to apply saps transformation
+    #     return pao2fio2
 
     if cpap == 1 or vent == 1:
         if pao2fio2 < 100:
@@ -289,7 +290,6 @@ def transform_pao2fio2(pao2fio2: float, cpap: int, vent: int, convert_score: boo
         return 6
     elif cpap == 0 and vent == 0:
         return 0
-    # print(f"{cpap=}, {vent=}, {pao2fio2=}")
     return None
 
 

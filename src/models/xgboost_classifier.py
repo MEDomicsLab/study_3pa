@@ -1,10 +1,11 @@
-from typing import Any, Dict, Optional, List
+from typing import Callable, Union
 
 import matplotlib
 import numpy as np
 import optuna
 import pandas as pd
 import xgboost as xgb
+
 optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 matplotlib.use('Agg')
@@ -12,17 +13,19 @@ import matplotlib.pyplot as plt
 
 plt.ioff()  # Turn off interactive plotting
 from copy import deepcopy
-
 from MED3pa.models.abstract_models import ClassificationModel
 
 
 class XGBClassifier(ClassificationModel):
-    def __init__(self, objective: str = 'binary:logistic', class_weighting: bool = False, random_state: int = None):
-        super().__init__(objective=objective, class_weighting=class_weighting, random_state=random_state)
+    def __init__(self, objective: str = 'binary:logistic', class_weighting: bool = False, random_state: int = None,
+                 verbose: bool = False):
+        super().__init__(objective=objective, class_weighting=class_weighting, random_state=random_state,
+                         verbose=verbose)
         self.model_class = xgb.Booster
 
-    def fit(self, data, target, n_trials=100, timeout: int = None, threshold: str = None, calibrate: bool = False,
-            training_parameters: dict = None, balance_train_classes: bool = None, weights: np.ndarray = None):
+    def fit(self, data: pd.DataFrame, target: np.ndarray, n_trials: int = 100, timeout: int | None = None,
+            threshold: str | None = None, calibrate: bool | None = False, training_parameters: dict | None = None,
+            balance_train_classes: bool | None = None, weights: np.ndarray | None = None) -> None:
 
         if balance_train_classes is not None:
             self._class_weighting = balance_train_classes
@@ -70,19 +73,20 @@ class XGBClassifier(ClassificationModel):
         self.model.fit(data, target, sample_weight=weights)
 
         if calibrate:
-            # print(f"Results before calibration: \n {self.get_results(calibration_data, calibration_target)}")
-            # self.plot_probability_distribution(calibration_data, calibration_target, save_path="/home/local/USHERBROOKE/lefo2801/3pa_test_oym/3pa_upd/3PA/hosp/240308/cal_pre.png")
-            # self.plot_roc_curve(calibration_data, calibration_target, save_path="/home/local/USHERBROOKE/lefo2801/3pa_test_oym/3pa_upd/3PA/hosp/240308/auc_pre.png")
+            if self.verbose:
+                print(f"Results before calibration: \n {self.get_results(calibration_data, calibration_target)}")
+                self.plot_probability_distribution(calibration_data, calibration_target, save_path="cal_pre.png")
+                self.plot_roc_curve(calibration_data, calibration_target, save_path="auc_pre.png")
             if type(calibration_data) is xgb.DMatrix:
                 calibration_data = calibration_data.get_data().toarray()
             elif isinstance(calibration_data, pd.DataFrame):
                 calibration_data = calibration_data.to_numpy()
-            self.calibrate_model(y_pred=self.model.predict_proba(calibration_data)[:, 1],
-                                 y_true=calibration_target,
+            self.calibrate_model(y_true=calibration_target,
                                  data=calibration_data)
-            # print(f"Results After calibration: \n {self.get_results(calibration_data, calibration_target)}")
-            # self.plot_probability_distribution(calibration_data, calibration_target, save_path="/home/local/USHERBROOKE/lefo2801/3pa_test_oym/3pa_upd/3PA/hosp/240308/cal_post.png")
-            # self.plot_roc_curve(calibration_data, calibration_target, save_path="/home/local/USHERBROOKE/lefo2801/3pa_test_oym/3pa_upd/3PA/hosp/240308/auc_post.png")
+            if self.verbose:
+                print(f"Results After calibration: \n {self.get_results(calibration_data, calibration_target)}")
+                self.plot_probability_distribution(calibration_data, calibration_target, save_path="cal_post.png")
+                self.plot_roc_curve(calibration_data, calibration_target, save_path="auc_post.png")
 
         if threshold:
             predicted = self.predict_proba(data)[:, 1]
@@ -94,7 +98,7 @@ class XGBClassifier(ClassificationModel):
                 raise NotImplementedError("Threshold correction methods must be 'auc' or 'auprc', not "
                                           "{}".format(threshold))
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         if isinstance(X, pd.DataFrame):
             X = X.to_numpy()
         if self._calibration:
@@ -106,11 +110,11 @@ class XGBClassifier(ClassificationModel):
             probability = self.model.predict_proba(X)
         return probability
 
-    def _objective_fct(self, data, target):
+    def _objective_fct(self, data: pd.DataFrame, target: np.ndarray) -> Callable[[optuna.trial], float]:
         dtrain = xgb.DMatrix(data, label=target)
         params_global = self.get_params()
 
-        def __objective(trial):
+        def __objective(trial: optuna.trial) -> float:
             param = {
                 "device": "cpu",
                 "verbosity": 0,
@@ -155,23 +159,10 @@ class XGBClassifier(ClassificationModel):
 
             if self._class_weighting:
                 param['scale_pos_weight'] = len(target[target == 0]) / len(target[target == 1])
-            #     samples_weights = class_weight.compute_sample_weight(
-            #         class_weight='balanced',
-            #         y=target
-            #     )
-            # else:
-            #     samples_weights = None
-            # if params is not None:
-            #     param.update(params)
 
-            try:
-                metric = np.mean(xgb.cv(params=param, dtrain=dtrain, nfold=5, metrics='auc',
-                                        seed=seed)['test-auc-mean'])
-            except:
-                metric = 0
-            # metric = np.mean(cross_val_score(xgb.XGBClassifier(random_state=self._random_state, **param), data,
-            #                                  target, scoring='roc_auc',
-            #                                  fit_params={'sample_weight': samples_weights}))
+            metric = np.mean(xgb.cv(params=param, dtrain=dtrain, nfold=5, metrics='auc',
+                                    seed=seed)['test-auc-mean'])
+
             if np.isnan(metric):
                 return 0
             return metric

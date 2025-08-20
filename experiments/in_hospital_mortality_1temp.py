@@ -8,7 +8,7 @@ import numpy as np
 
 from MED3pa.datasets import DatasetsManager
 from MED3pa.models import BaseModelManager
-from MED3pa.med3pa import Med3paExperiment, Med3paDetectronExperiment
+from MED3pa.med3pa import Med3paExperiment
 from sklearn.impute import KNNImputer
 
 from src.data.processing_in_hospital_mortality import ventilation_correction
@@ -75,13 +75,33 @@ mimic_0813_train['x'] = pd.DataFrame(imputer.fit_transform(mimic_0813_train['x']
 mimic_0813_test['x'] = pd.DataFrame(imputer.transform(mimic_0813_test['x']), columns=mimic_0813_test['x'].columns)
 mimic_1419['x'] = pd.DataFrame(imputer.fit_transform(mimic_1419['x']), columns=mimic_1419['x'].columns)
 
+##########################
+# Count hospital admissions
+hospital_counts = eicu_df['hospitalid'].value_counts()
+
+# Keep only rows from hospitals with >= 225 admissions
+valid_hospitals = hospital_counts[hospital_counts >= 225].index
+filtered_df = eicu_df[eicu_df['hospitalid'].isin(valid_hospitals)]
+
+# Proceed with the rest of your processing
+eicu = {}
+eicu['x'] = filtered_df.copy()
+eicu['y'] = np.array(eicu['x'].pop('deceased'))
+eicu['x'] = pd.DataFrame(imputer.fit_transform(eicu['x']), columns=eicu['x'].columns)
+
+# eicu = {}
+# eicu['x'] = eicu_df
+# eicu['y'] = np.array(eicu['x'].pop('deceased'))
+# eicu['x'] = pd.DataFrame(imputer.fit_transform(eicu['x']), columns=eicu['x'].columns)
+##########################
+
 # Round imputed Binary variables
 variables_to_round = ['mets', 'hem', 'aids', 'cpap', 'vent']
-for df in [mimic_0813_train, mimic_0813_test, mimic_1419]:
+for df in [mimic_0813_train, mimic_0813_test, mimic_1419, eicu]:
     df['x'][variables_to_round] = df['x'][variables_to_round].round()
 
 # Apply saps transformation on datasets
-for df in [mimic_0813_train, mimic_0813_test, mimic_1419]:
+for df in [mimic_0813_train, mimic_0813_test, mimic_1419, eicu]:
     df['x'] = apply_saps(df['x'], params['to_saps_score'])
 
 # get BaseModel
@@ -109,8 +129,8 @@ print(f"BaseModel metrics: {baseMdlRes}")
 
 # ## MED3pa section
 # Set the base model using BaseModelManager
-base_model_manager = BaseModelManager()
-base_model_manager.set_base_model(model=baseMdl)
+base_model_manager = BaseModelManager(model=baseMdl)
+# base_model_manager.set_base_model(model=baseMdl)
 
 # Define parameters for the experiment
 ipc_params = {'n_estimators': 100}
@@ -179,33 +199,6 @@ for data_name, data_dict in {'Internal': mimic_0813_test,
     # Save the results to a specified directory
     results.save(file_path=f'experiments/results/in_hospital_mortality/{data_name}')
 
-    # Execute the Med3pa experiment with Detectron results
-    if data_name != "Internal":
-        med3pa_detectron_results = Med3paDetectronExperiment.run(
-            datasets=datasets,
-            base_model_manager=base_model_manager,
-            uncertainty_metric="sigmoidal_error",
-            ipc_type='EnsembleRandomForestRegressor',
-            ipc_params=ipc_params,
-            apc_params=apc_params,
-            ipc_grid_params=ipc_grid,
-            apc_grid_params=apc_grid,
-            samples_size=20,
-            ensemble_size=10,
-            num_calibration_runs=100,
-            patience=3,
-            test_strategies=["original_disagreement_strategy", "mannwhitney_strategy",
-                             "enhanced_disagreement_strategy"],
-            allow_margin=False,
-            margin=0.05,
-            samples_ratio_min=0,
-            samples_ratio_max=10,
-            samples_ratio_step=5,
-            evaluate_models=True,
-        )
-
-        # Save the results to a specified directory
-        med3pa_detectron_results.save(file_path=f'experiments/results/in_hospital_mortality/with_detectron/{data_name}')
 
 # # ## eICU EXPERIMENT USING MIMIC-TRAINED BASEMODEL
 # # Split eICU dataset by hospitalid
