@@ -1,24 +1,37 @@
-from typing import Callable, Union
+"""
+This file contains the implementation of the xgboost classifier model.
+"""
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import optuna
 import pandas as pd
 import xgboost as xgb
-
-optuna.logging.set_verbosity(optuna.logging.ERROR)
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
-plt.ioff()  # Turn off interactive plotting
 from copy import deepcopy
 from MED3pa.models.abstract_models import ClassificationModel
+from typing import Callable, Union
+
+optuna.logging.set_verbosity(optuna.logging.ERROR)
+matplotlib.use('Agg')
+plt.ioff()  # Turn off interactive plotting
 
 
 class XGBClassifier(ClassificationModel):
+    """
+    XGBoost classifier model that is compatible with MED3pa requirements.
+    """
     def __init__(self, objective: str = 'binary:logistic', class_weighting: bool = False, random_state: int = None,
                  verbose: bool = False):
+        """
+        Initializes XGBoost model instance.
+
+        Args:
+            objective (str): The objective of the model. Defaults to 'binary:logistic'.
+            class_weighting: Whether to use class weighting for model training. Defaults to False.
+            random_state: The random state to use. Defaults to None.
+            verbose: Whether to print progress. Defaults to False.
+        """
         super().__init__(objective=objective, class_weighting=class_weighting, random_state=random_state,
                          verbose=verbose)
         self.model_class = xgb.Booster
@@ -26,6 +39,21 @@ class XGBClassifier(ClassificationModel):
     def fit(self, data: pd.DataFrame, target: np.ndarray, n_trials: int = 100, timeout: int | None = None,
             threshold: str | None = None, calibrate: bool | None = False, training_parameters: dict | None = None,
             balance_train_classes: bool | None = None, weights: np.ndarray | None = None) -> None:
+        """
+        Fits XGBoost model instance.
+
+        Args:
+            data: Dataframe used to train the model.
+            target: Targets to predict.
+            n_trials: Number of training trials to perform with optuna. Defaults to 100.
+            timeout: Timeout parameter for optuna. Stop study after the given number of second(s). Defaults to None.
+            threshold: Threshold correction to apply to the model. Options are ['auc', 'auprc', None]. Defaults to None.
+            calibrate: Wether to apply calibration to the model. Defaults to False.
+            training_parameters: Dictionary of training parameters. Defaults to None.
+            balance_train_classes: Whether to use class weighting for model training. Defaults to None.
+            weights: Weights to apply to each sample. Defaults to None.
+
+        """
 
         if balance_train_classes is not None:
             self._class_weighting = balance_train_classes
@@ -49,7 +77,7 @@ class XGBClassifier(ClassificationModel):
         else:
             study = optuna.create_study(direction="maximize")
 
-        if calibrate:  # Temporary, for comparable results between calibrated and non-calibrated experiments, otherwise for calibration
+        if calibrate:
             data = deepcopy(data)
             target = deepcopy(target)
             data['target'] = target
@@ -102,7 +130,7 @@ class XGBClassifier(ClassificationModel):
         if isinstance(X, pd.DataFrame):
             X = X.to_numpy()
         if self._calibration:
-            if type(X) is xgb.DMatrix:
+            if isinstance(X, xgb.DMatrix):
                 probability = self._calibration.predict_proba(X.get_data().toarray())
             else:
                 probability = self._calibration.predict_proba(X)
@@ -111,6 +139,16 @@ class XGBClassifier(ClassificationModel):
         return probability
 
     def _objective_fct(self, data: pd.DataFrame, target: np.ndarray) -> Callable[[optuna.trial], float]:
+        """
+        Objective function for optuna trials.
+        Args:
+            data: Data to optimize the model with optuna.
+            target: Target variable to optimize the model with optuna.
+
+        Returns:
+            The objective function to train the model with optuna.
+
+        """
         dtrain = xgb.DMatrix(data, label=target)
         params_global = self.get_params()
 

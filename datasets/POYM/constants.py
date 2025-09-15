@@ -7,15 +7,20 @@ Description: Defines constants related to the dataset. Taken and adapted from th
     https://github.com/MEDomics-UdeS/POYM/blob/main/src/data/processing/constants.py
 """
 
-import re
 import pandas as pd
-
+import re
 from typing import Tuple, List
 
 
 def get_predictors(df: pd.DataFrame) -> Tuple[List[str], str, List[str]]:
     """
+    Returns predictors to use for the POYM task.
 
+    Args:
+        df (pd.DataFrame): Dataframe containing all variables
+
+    Returns:
+        List of predictors to use for the POYM task.
     """
 
     # Comorbidities diagnostic variables

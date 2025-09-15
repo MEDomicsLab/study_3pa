@@ -1,23 +1,20 @@
 """
-    @file:              saps_processing.py
-
-    @Description:       This file contains helpful functions to preprocess datasets based on the
-                        SAPS-II mortality score (https://www.mdcalc.com/simplified-acute-physiology-score-saps-ii)
+This file contains helpful functions to preprocess datasets based on the SAPS-II mortality score
+(https://www.mdcalc.com/simplified-acute-physiology-score-saps-ii).
 """
 
 import numpy as np
 from pandas import DataFrame
-from typing import Tuple
 
 
 def apply_saps(df: DataFrame, convert_score: bool) -> DataFrame:
     """
-    Applies saps processing to variables in the dataframe
+    Applies saps processing to variables in the dataframe.
 
     :param df: dataframe to process
-    :param convert_score:  Boolean indicating whether keeping the SAPS-II score or original variables (between min/max)
+    :param convert_score:  Boolean indicating whether keeping the SAPS-II score or original variables (between min/max).
 
-    :return: processed dataframe
+    :return: processed dataframe.
     """
     df_saps = df.copy()
 
@@ -160,8 +157,8 @@ def transform_bilirubin(bil_max: int, convert_score: bool = True) -> int:
     """
     Returns the SAPS-II score for a given patient's bicarbonate
 
-    :param bic_min: Smallest bicarbonate value of patient
-    :param convert_score: Boolean indicating whether returning SAPS-II score or bic_min
+    :param bil_max: Highest bilirubin value of patient
+    :param convert_score: Boolean indicating whether returning SAPS-II score or bil_max
 
     :return: related SAPS-II score
     """
@@ -377,7 +374,7 @@ def transform_sodium(sod_min: int, sod_max: int, convert_score: bool) -> int:
 
 def transform_temperature(temp_max: int, convert_score: bool) -> int:
     """
-    Returns the SAPS-II score for a given patient's temperature (Celcius)
+    Returns the SAPS-II score for a given patient's temperature (Celsius)
 
     :param temp_max: Greatest temperature value of patient
     :param convert_score: Boolean indicating whether returning SAPS-II score or temp_max

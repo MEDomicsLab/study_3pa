@@ -1,5 +1,5 @@
 """
-
+This script generates visualization of MDR curves and Profiles for all results.
 """
 from utils import extract_results_data
 from plot_metrics import generate_mdr_curves, generate_combined_curves

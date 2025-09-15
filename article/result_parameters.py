@@ -1,5 +1,5 @@
 """
-
+This file contains the parameters for the visualization of the results of the experiments for the article.
 """
 
 # Parameters
@@ -10,9 +10,9 @@ file_parameters = {'poym':
                         'rcParams': {'font.family': ['serif'],
                                      'font.size': 15,
                                      'mathtext.fontset': 'dejavuserif'},
-                        'profile_metrics': ['Specificity', 'Sensitivity', 'NPV', 'PPV', 'AUC'],  # , 'diff_AUC'
-                        'profile_depth': 3,
-                        'profiles_highlights': [91, 34],
+                        'profile_metrics': ['Specificity', 'Sensitivity', 'NPV', 'PPV', 'AUC'],
+                        'profile_depth': 4,
+                        'profiles_highlights': [2, 3, 4, 19, 59, 60, 61, 76, 91, 92, 107],
                         'dr': 95,
                         'threshold': 0.1235550345060529
                         },
@@ -28,7 +28,7 @@ file_parameters = {'poym':
                           'threshold': 0.19050934303395273
                           },
                    'tv': {'title': 'Temporal Validation',
-                          'show_legend': False,
+                          'show_legend': True,
                           'linewidth': 3,
                           'rcParams': {'font.family': ['serif'],
                                        'font.size': 15},
@@ -57,18 +57,7 @@ file_parameters = {'poym':
                              'profile_metrics': ['Specificity', 'Sensitivity', 'NPV', 'PPV', 'AUC'],
                              'profile_depth': 3,
                              'profiles_highlights': [],
-                             'dr': 89,
-                             'threshold': 0.19050934303395273
-                             },
-                   'ev122': {'title': 'External Validation 122',
-                             'show_legend': False,
-                             'linewidth': 4,
-                             'rcParams': {'font.family': ['serif'],
-                                          'font.size': 15},
-                             'profile_metrics': ['Specificity', 'Sensitivity', 'NPV', 'PPV', 'AUC'],
-                             'profile_depth': 2,
-                             'profiles_highlights': [],
-                             'dr': 95,
+                             'dr': 90,
                              'threshold': 0.19050934303395273
                              },
                    'ev167': {'title': 'External Validation 167',
@@ -87,12 +76,11 @@ text_colors = {'less': 'red',
                'equal': 'black',
                'greater': "rgb(85, 107, 47)"}
 
-metrics_parameters = {'Specificity': (0, 0, 1),  # (0.35, 0.70, 0.90)
+metrics_parameters = {'Specificity': (0, 0, 1),
                       'Sensitivity': (1, 0, 0),
                       'NPV': (1, 0.647, 0),
                       'PPV': (0, 0.60, 0.50),
-                      'Auc': (0.5, 0.5, 0.5),  # (0.95, 0.90, 0.25)
-                      # 'NB': 'green'
+                      'Auc': (0.5, 0.5, 0.5)
                       }
 
 combined_results_parameters = {'show_legend': True,

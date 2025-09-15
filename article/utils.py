@@ -1,5 +1,5 @@
 """
-
+Extract information from result files.
 """
 import os
 import json

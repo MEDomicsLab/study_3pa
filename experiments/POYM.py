@@ -1,22 +1,21 @@
 """
-Create experiments for the in-hospital mortality problem using MIMIC and eICU datasets
+Create experiments for the One-Year Mortality task using Data from https://doi.org/10.1007/s13755-024-00332-4.
 """
 
-from datetime import datetime
 import pandas as pd
 import pickle
-
+from datetime import datetime
 from MED3pa.datasets import DatasetsManager
 from MED3pa.models import BaseModelManager
 from MED3pa.med3pa import Med3paExperiment, Med3paDetectronExperiment
-# from sklearn.ensemble import RandomForestClassifier
-from sklearn.impute import KNNImputer
+from MED3pa.visualization.profiles_visualization import visualize_tree
+from MED3pa.visualization.mdr_visualization import visualize_mdr
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 
 from src.models.random_forest_classifier import RandomForestOptunaClassifier
 from datasets.POYM.constants import get_predictors
 
-from sklearn.model_selection import train_test_split
 
 # Constants
 params = {
@@ -93,18 +92,17 @@ def poym_experiment():
 
     # ## MED3pa section
     # Set the base model using BaseModelManager
-    base_model_manager = BaseModelManager()
-    base_model_manager.set_base_model(model=clf)
+    base_model_manager = BaseModelManager(model=clf)
 
     # Define parameters for the experiment
     ipc_params = {'n_estimators': 100}
-    ipc_grid = None  # {
-    #     'n_estimators': [50, 100, 200],
-    #     'max_depth': [2, 3, 4, 5],
-    #     'min_samples_leaf': [1, 2, 4]
-    # }
+    ipc_grid = {
+        'n_estimators': [50, 100, 200],
+        'max_depth': [2, 3, 4, 5],
+        'min_samples_leaf': [1, 2, 4]
+    }
     apc_grid = {
-        # 'max_depth': [2, 3, 4, 5],
+        'max_depth': [2, 3, 4, 5],
         'min_samples_leaf': [1, 2, 4]
     }
     apc_params = {'max_depth': 6}
@@ -112,14 +110,12 @@ def poym_experiment():
     # Initialize the DatasetsManager
     datasets = DatasetsManager()
 
-    datasets.set_from_data(dataset_type="training", observations=train_data['x'].to_numpy(),
-                           true_labels=train_data['y'],
-                           column_labels=train_data['columns'])
-
+    # Set reference Data (Same distribution as training data)
     datasets.set_from_data(dataset_type="reference", observations=reference_data['x'],
                            true_labels=reference_data['y'],
                            column_labels=reference_data['columns'])
 
+    # Set testing Data for MED3pa evaluation
     datasets.set_from_data(dataset_type="testing", observations=test_data['x'],
                            true_labels=test_data['y'],
                            column_labels=test_data['columns'])
@@ -143,33 +139,8 @@ def poym_experiment():
 
     # Save the results to a specified directory
     med3pa_results.save(file_path=f'experiments/results/poym')
-
-    # # Execute the Med3pa experiment with Detectron results
-    # med3pa_detectron_results = Med3paDetectronExperiment.run(
-    #     datasets=datasets,
-    #     base_model_manager=base_model_manager,
-    #     uncertainty_metric="sigmoidal_error",
-    #     ipc_type='EnsembleRandomForestRegressor',
-    #     ipc_params=ipc_params,
-    #     apc_params=apc_params,
-    #     ipc_grid_params=ipc_grid,
-    #     apc_grid_params=apc_grid,
-    #     samples_size=20,
-    #     ensemble_size=10,
-    #     num_calibration_runs=100,
-    #     patience=3,
-    #     test_strategies=["original_disagreement_strategy", "mannwhitney_strategy", "enhanced_disagreement_strategy"],
-    #     allow_margin=False,
-    #     margin=0.05,
-    #     samples_ratio_min=0,
-    #     samples_ratio_max=10,
-    #     samples_ratio_step=5,
-    #     evaluate_models=True,
-    #     prev_med3pa_results=med3pa_results
-    # )
-    #
-    # # Save the results to a specified directory
-    # med3pa_detectron_results.save(file_path=f'experiments/results/poym/with_detectron')
+    visualize_mdr(result=med3pa_results, filename='experiments/results/poym/mdr')
+    visualize_tree(result=med3pa_results, filename='experiments/results/poym/profiles')
 
 
 if __name__ == '__main__':

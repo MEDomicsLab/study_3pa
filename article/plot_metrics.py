@@ -1,5 +1,5 @@
 """
-
+Generates MDR curves for task results.
 """
 import matplotlib.pyplot as plt
 
@@ -106,4 +106,3 @@ def generate_combined_curves(results_list, metric='Accuracy'):
     plt.grid()
     plt.rcParams.update(**plot_parameters['rcParams'])
     plt.savefig('figures/mdr_combined.svg', format="svg")
-    # plt.show()

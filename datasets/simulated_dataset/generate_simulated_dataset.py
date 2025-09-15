@@ -1,39 +1,52 @@
-import numpy as np
+"""
+Generates the simulated dataset for the simulated data experiments.
+"""
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pickle
-import seaborn as sns
-from sklearn.ensemble import RandomForestClassifier
 from matplotlib.colors import ListedColormap
 from sklearn.metrics import (accuracy_score, classification_report, confusion_matrix,
                              roc_auc_score, average_precision_score)
+from typing import Any, List, Optional
 
 from src.models.random_forest_classifier import RandomForestOptunaClassifier
 
 
-class DataGenerator:
+def generate_data(n_data: List[int], means: List[float], stds: List[float], seed: Optional[int] = None) -> np.ndarray:
     """
-    Binary class Data generator
+    Generates the simulated dataset.
+    Args:
+        n_data: List containing the number of data for each subset.
+        means: List containing the mean values for each subset.
+        stds: List containing the standard deviations for each subset.
+        seed: Random number generator seed. Defaults to None.
+
+    Returns:
+        The simulated dataset.
+
     """
-
-    def __init__(self, generative_func=None):
-        self.generative_func = generative_func
-
-    def generate_data(self, n_data, means, stds, seed=None):
-        np.random.seed(seed)
-        data = []
-        for N, mean, std in zip(n_data, means, stds):
-            dist = np.random.randn(N, len(mean)) * std + mean
-            data.append(dist)
-        X_data = np.concatenate(data, axis=0)
-
-        if self.generative_func is None:
-            return X_data
-        return X_data, self.generative_func(X_data)
+    np.random.seed(seed)
+    data = []
+    for N, mean, std in zip(n_data, means, stds):
+        dist = np.random.randn(N, len(mean)) * std + mean
+        data.append(dist)
+    X_data = np.concatenate(data, axis=0)
+    return X_data
 
 
-# Function to create a meshgrid and predict over it
-def plot_decision_regions(X, y, classifier, title, filename):
+def plot_decision_regions(X: np.ndarray, y: np.ndarray, classifier: Any, title: str, filename: str) -> None:
+    """
+    Plots the decision regions of the model with the data in a scatter plot.
+
+    Args:
+        X (np.ndarray): Training data.
+        y (np.ndarray): Class labels for the training data.
+        classifier (Any): Classifier.
+        title (str): Title of the plot.
+        filename (str): Filename of the saved plot.
+    """
     x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
     y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
     xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01),
@@ -55,7 +68,7 @@ def plot_decision_regions(X, y, classifier, title, filename):
 
 
 if __name__ == "__main__":
-    ## Constants
+    # Constants
     TRAIN_N = [680, 170]
     TRAIN_MEANS = [[4, 1.65], [4, -1.65]]
     TRAIN_STDS = [[3, 1.15], [3, 1.15]]
@@ -64,15 +77,13 @@ if __name__ == "__main__":
     TEST_MEANS = [[4, 2], [4, -2], [17, 0], [17, 0]]
     TEST_STDS = [[3, 1.15], [3, 1.15], [1.5, 2], [1.5, 2]]
 
-    dataGenerator = DataGenerator()
-
-    X_train = dataGenerator.generate_data(n_data=TRAIN_N, means=TRAIN_MEANS, stds=TRAIN_STDS, seed=19546)
+    X_train = generate_data(n_data=TRAIN_N, means=TRAIN_MEANS, stds=TRAIN_STDS, seed=19546)
     Y_train = np.append(np.zeros(TRAIN_N[0]), np.ones(TRAIN_N[1]))
 
-    X_reference = dataGenerator.generate_data(n_data=TRAIN_N, means=TRAIN_MEANS, stds=TRAIN_STDS, seed=19547)
+    X_reference = generate_data(n_data=TRAIN_N, means=TRAIN_MEANS, stds=TRAIN_STDS, seed=19547)
     Y_reference = np.append(np.zeros(TRAIN_N[0]), np.ones(TRAIN_N[1]))
 
-    X_test = dataGenerator.generate_data(n_data=TEST_N, means=TEST_MEANS, stds=TEST_STDS, seed=19550)
+    X_test = generate_data(n_data=TEST_N, means=TEST_MEANS, stds=TEST_STDS, seed=19550)
     Y_test = np.concatenate([np.zeros(TEST_N[0]), np.ones(TEST_N[1]), np.zeros(TEST_N[2]), np.ones(TEST_N[3])])
 
     # Train classifier

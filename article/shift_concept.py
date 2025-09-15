@@ -1,3 +1,8 @@
+"""
+This file contains the code to generate the shift concept figure, corresponding to Figure 1 in
+https://www.medrxiv.org/content/10.1101/2025.08.22.25334254v1.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns

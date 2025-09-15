@@ -1,20 +1,17 @@
 """
-Create experiments for the in-hospital mortality problem using MIMIC and eICU datasets
+Create experiments for the in-hospital mortality problem using MIMIC and eICU datasets.
 """
 
 import pandas as pd
 import pickle
-import numpy as np
-
+import matplotlib
 from MED3pa.datasets import DatasetsManager
 from MED3pa.models import BaseModelManager
-from MED3pa.med3pa import Med3paExperiment, Med3paDetectronExperiment
-from sklearn.impute import KNNImputer
+from MED3pa.med3pa import Med3paExperiment
+from MED3pa.visualization.profiles_visualization import visualize_tree
+from MED3pa.visualization.mdr_visualization import visualize_mdr
 
-from src.data.processing_in_hospital_mortality import ventilation_correction
-from src.data.saps_processing import apply_saps
-from src.models.random_forest_classifier import RandomForestOptunaClassifier
-
+matplotlib.use('Qt5Agg')
 
 # Constants
 params = {
@@ -41,8 +38,7 @@ def simulated_data_experiment():
 
     # ## MED3pa section
     # Set the base model using BaseModelManager
-    base_model_manager = BaseModelManager()
-    base_model_manager.set_base_model(model=clf)
+    base_model_manager = BaseModelManager(model=clf)
 
     # Define parameters for the experiment
     ipc_params = {'n_estimators': 100}
@@ -53,7 +49,7 @@ def simulated_data_experiment():
 
     }
     apc_grid = {
-        # 'max_depth': [2, 3, 4, 5],
+        'max_depth': [2, 3, 4, 5],
         'min_samples_leaf': [1, 2, 4]
     }
     apc_params = {'max_depth': 6}
@@ -61,14 +57,12 @@ def simulated_data_experiment():
     # Initialize the DatasetsManager
     datasets = DatasetsManager()
 
-    datasets.set_from_data(dataset_type="training", observations=train_data['x'].to_numpy(),
-                           true_labels=train_data['y'],
-                           column_labels=train_data['x'].columns)
-
+    # Set reference Data (Same distribution as training data)
     datasets.set_from_data(dataset_type="reference", observations=reference_data['x'].to_numpy(),
                            true_labels=reference_data['y'],
                            column_labels=reference_data['x'].columns)
 
+    # Set testing Data for MED3pa evaluation
     datasets.set_from_data(dataset_type="testing", observations=test_data['x'].to_numpy(),
                            true_labels=test_data['y'],
                            column_labels=test_data['x'].columns)
@@ -91,33 +85,8 @@ def simulated_data_experiment():
 
     # Save the results to a specified directory
     results.save(file_path=f'experiments/results/simulated_dataset')
-
-    # Execute the Med3pa experiment with Detectron results
-    med3pa_detectron_results = Med3paDetectronExperiment.run(
-        datasets=datasets,
-        base_model_manager=base_model_manager,
-        uncertainty_metric="sigmoidal_error",
-        ipc_type='RandomForestRegressor',
-        ipc_params=ipc_params,
-        apc_params=apc_params,
-        ipc_grid_params=ipc_grid,
-        apc_grid_params=apc_grid,
-        samples_size=20,
-        ensemble_size=10,
-        num_calibration_runs=100,
-        patience=3,
-        test_strategies=["original_disagreement_strategy", "mannwhitney_strategy", "enhanced_disagreement_strategy"],
-        allow_margin=False,
-        margin=0.05,
-        samples_ratio_min=0,
-        samples_ratio_max=10,
-        samples_ratio_step=5,
-        evaluate_models=True,
-        prev_med3pa_results=results
-    )
-
-    # Save the results to a specified directory
-    med3pa_detectron_results.save(file_path=f'experiments/results/simulated_dataset/with_detectron')
+    visualize_mdr(result=results, filename='experiments/results/simulated_dataset/mdr')
+    visualize_tree(result=results, filename='experiments/results/simulated_dataset/profiles')
 
 
 if __name__ == '__main__':

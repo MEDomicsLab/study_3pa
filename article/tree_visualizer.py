@@ -44,7 +44,8 @@ class Visualizer:
             profile['path'] = [re.sub(r'(?<!\w)(\d+\.\d+|\d+)(?!\w)',
                                       lambda m: str(round(float(m.group()), 1)), s) for s in profile['path']]
             # Rename Auc to AUC
-            profile['metrics']['AUC'] = profile['metrics']['Auc']
+            if 'Auc' in profile['metrics']:
+                profile['metrics']['AUC'] = profile['metrics']['Auc']
 
         # Measure NB
         if self.threshold is not None:
