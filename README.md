@@ -1,4 +1,4 @@
-# TPredictive Performance Precision Analysis in Medicine: Identification of low-confidence predictions at patient and profile levels (MED3pa I)
+# Predictive Performance Precision Analysis in Medicine: Identification of low-confidence predictions at patient and profile levels (MED3pa I)
 
 This repository is to generate results of the article "Predictive Performance Precision Analysis in Medicine: 
 Identification of low-confidence predictions at patient and profile levels (MED3pa I)": https://doi.org/10.1101/2025.08.22.25334254.

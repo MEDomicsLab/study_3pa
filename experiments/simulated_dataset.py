@@ -11,7 +11,6 @@ from MED3pa.med3pa import Med3paExperiment
 from MED3pa.visualization.profiles_visualization import visualize_tree
 from MED3pa.visualization.mdr_visualization import visualize_mdr
 
-matplotlib.use('Qt5Agg')
 
 # Constants
 params = {
