@@ -1,7 +1,7 @@
 # Predictive Performance Precision Analysis in Medicine: Identification of low-confidence predictions at patient and profile levels (MED3pa I)
 
 This repository is to generate results of the article "Predictive Performance Precision Analysis in Medicine: 
-Identification of low-confidence predictions at patient and profile levels (MED3pa I)": https://doi.org/10.1101/2025.08.22.25334254.
+Identification of low-confidence predictions at patient and profile levels (MED3pa I)", published in the Journal of the American Medical Informatics Association (JAMIA): https://doi.org/10.1093/jamia/ocag034.
 
 The MED3PA package used in this work is available at this link: https://github.com/MEDomicsLab/MED3pa
 
