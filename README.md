@@ -13,8 +13,8 @@ This study uses three types of datasets:
 - **Simulated Data**
 A synthetic dataset is generated in this repository, using the 'generated_simulated_dataset.py' script in the datasets/simulated_dataset folder.
 - **Public Clinical Datasets** (In-hospital mortality task)
-  - **eICU Collaborative Research Database (eICU)** – Requires credentialed access through [PhysioNet](https://physionet.org/).
-  - **MIMIC-IV** – Also requires credentialed access through [PhysioNet](https://physionet.org/).  
+  - **eICU Collaborative Research Database (eICU)** (v2.0) – Requires credentialed access through [PhysioNet](https://physionet.org/).
+  - **MIMIC-IV** (V1.0) – Also requires credentialed access through [PhysioNet](https://physionet.org/).  
   Users must complete the required training and data use agreements to access these datasets.
 - **Private Clinical Dataset** (One Year mortality task, POYM)
     Due to regulations safeguarding patient privacy, this dataset cannot be shared. However, a synthetic dataset is publicly available on https://zenodo.org/doi/10.5281/zenodo.12954672.
