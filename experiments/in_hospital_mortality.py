@@ -87,7 +87,6 @@ filtered_df = eicu_df[eicu_df['hospitalid'].isin(valid_hospitals)]
 eicu = {}
 eicu['x'] = filtered_df.copy()
 eicu['y'] = np.array(eicu['x'].pop('deceased'))
-eicu['x'] = pd.DataFrame(imputer.fit_transform(eicu['x']), columns=eicu['x'].columns)
 
 # Round imputed Binary variables
 variables_to_round = ['mets', 'hem', 'aids', 'cpap', 'vent']
